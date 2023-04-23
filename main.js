@@ -183,8 +183,16 @@ function main() {
     needRotate = (event.code == 'Digit1') ?
       1 : (event.code == 'Digit2') ?
       2 : (event.code == 'Digit3') ? 3 : 0;
-    console.log(needRotate)
   })
+
+  const rotateAroundObjectAxis = function (object, axis, radians) {
+    rotObjectMatrix = new THREE.Matrix4();
+    rotObjectMatrix.makeRotationAxis(axis.normalize(), radians);
+    object.matrix.multiply(rotObjectMatrix)//.makeTranslation(-1, 0, 0);
+    object.rotation.setFromRotationMatrix(object.matrix);
+  }
+
+  //rotateAroundObjectAxis(object, new THREE.Vector3(0,1,0), Math.PI/4);
 
   const step = Math.PI / 100;
   let angle = 0;
@@ -203,12 +211,12 @@ function main() {
         angle += step;
       }
       if (needRotate == 1) {
-        groupM1.rotation.y += angle;
+        rotateAroundObjectAxis(groupM1, new THREE.Vector3(-1, 0, 0), angle);
       } else if (needRotate == 2) {
         groupE.rotation.y += angle;
       } else if (needRotate == 3) {
-      groupM2.rotation.y += angle;
-    }
+        groupM2.rotation.y += angle;
+      }
     }
 
     renderer.render(scene, camera);
