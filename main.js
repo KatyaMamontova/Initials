@@ -16,7 +16,7 @@ function main() {
 
   const scene = new THREE.Scene();
 
-  let lightX = -1;
+  let lightX = 5;
   let lightY = 2;
   const lightZ = 3;
 
@@ -98,6 +98,7 @@ function main() {
   groupM1.add(box4);
   scene.add(groupM1);
 
+
   //E
 
   const material2 = new THREE.MeshStandardMaterial({
@@ -138,7 +139,7 @@ function main() {
   groupE.add(cylinder4);
   scene.add(groupE);
 
-  //M
+  //M2
 
   const material3 = new THREE.MeshStandardMaterial({
     color: 0xFFFFAA,
@@ -177,25 +178,28 @@ function main() {
   scene.add(groupM2);
 
   //клавиши 1, 2, 3
+
   let needRotate = 0;
 
   document.addEventListener('keyup', (event) => {
     needRotate = (event.code == 'Digit1') ?
       1 : (event.code == 'Digit2') ?
-      2 : (event.code == 'Digit3') ? 3 : 0;
-  })
+        2 : (event.code == 'Digit3') ? 3 : 0;
+  });
 
-  const rotateAroundObjectAxis = function (object, axis, radians) {
+  /* const rotateAroundObjectAxis = function (object, axis, radians) {
     rotObjectMatrix = new THREE.Matrix4();
     rotObjectMatrix.makeRotationAxis(axis.normalize(), radians);
     object.matrix.multiply(rotObjectMatrix)//.makeTranslation(-1, 0, 0);
     object.rotation.setFromRotationMatrix(object.matrix);
-  }
+  } */
 
   //rotateAroundObjectAxis(object, new THREE.Vector3(0,1,0), Math.PI/4);
 
   const step = Math.PI / 100;
   let angle = 0;
+
+  //const quaternion = new THREE.Quaternion();
 
   function render(time) {
     time *= 0.001;
@@ -206,16 +210,38 @@ function main() {
       camera.updateProjectionMatrix();
     }
 
+    
+    const groupM1control= new THREE.ObjectControls(camera, renderer.domElement, groupM1);
+
+    // console.log('step = ', step);
+    // console.log('angle = ', angle);
+
+    /*  const vector = new THREE.Vector3(1, 0, 0);
+     vector.applyQuaternion(quaternion); */
+
     if (needRotate) {
-      while (angle < 2 * Math.PI) {
+      if (angle < 2 * Math.PI) {
         angle += step;
-      }
-      if (needRotate == 1) {
-        rotateAroundObjectAxis(groupM1, new THREE.Vector3(-1, 0, 0), angle);
-      } else if (needRotate == 2) {
-        groupE.rotation.y += angle;
-      } else if (needRotate == 3) {
-        groupM2.rotation.y += angle;
+        // console.log(angle);
+        if (needRotate == 1) {
+          //rotateAroundObjectAxis(groupM1, new THREE.Vector3(-1, 0, 0), step);
+          groupM1control.setRotationY(angle);
+          groupM1control.update();
+          console.log(angle);
+          console.log(groupM1control)
+        } else if (needRotate == 2) {
+          groupE.rotation.y += step;
+          //groupE.rotation.set(0, angle, 0);
+        } else if (needRotate == 3) {
+          //groupM2.rotateY(step);
+          /* quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), step);
+          groupM2.matrixWorld.transformQuaternion( quaternion );
+          groupM2.applyQuaternion(quaternion); */
+          groupM2.rotateOnAxis(new THREE.Vector3(0, 1, 0), step);
+        }
+      } else {
+        angle = 0;
+        needRotate = 0;
       }
     }
 
