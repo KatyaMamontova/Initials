@@ -1,4 +1,5 @@
 function main() {
+  console.log()
   const canvas = document.querySelector('.screen');
   const renderer = new THREE.WebGLRenderer({
     canvas,
