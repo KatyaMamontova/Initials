@@ -73,7 +73,6 @@ function main() {
   const depthB = 0.2;
   const longBoxGeometry = new THREE.BoxGeometry(widthLB, height, depthB);
   const box1 = new THREE.Mesh(longBoxGeometry, material1);
-  box1.position.x = -2.7;
 
   const widthSB = 0.2;
   const heightSB = 1;
@@ -96,7 +95,18 @@ function main() {
   groupM1.add(box2);
   groupM1.add(box3);
   groupM1.add(box4);
-  scene.add(groupM1);
+
+  const boxObjM1 = new THREE.Object3D();
+  boxObjM1.add(groupM1);
+
+  const boxM1 = new THREE.Box3().setFromObject(boxObjM1);
+  boxM1.getCenter(boxObjM1.position);
+  boxObjM1.position.multiplyScalar(- 1);
+
+  const pivotM1 = new THREE.Group();
+  pivotM1.position.x = -1.6;
+  scene.add(pivotM1);
+  pivotM1.add(boxObjM1);
 
 
   //E
@@ -114,7 +124,6 @@ function main() {
   const longCylinderGeometry = new THREE.CylinderGeometry(
     radiusTop, radiusBottom, heightLC, radialSegments);
   const cylinder1 = new THREE.Mesh(longCylinderGeometry, material2);
-  cylinder1.position.x = -0.6;
 
   const heightSC = 1;
   const shortCylinderGeometry = new THREE.CylinderGeometry(radiusTop, radiusBottom, heightSC, radialSegments);
@@ -137,7 +146,18 @@ function main() {
   groupE.add(cylinder2);
   groupE.add(cylinder3);
   groupE.add(cylinder4);
-  scene.add(groupE);
+
+  const boxObjE = new THREE.Object3D();
+  boxObjE.add(groupE);
+
+  const boxE = new THREE.Box3().setFromObject(boxObjE);
+  boxE.getCenter(boxObjE.position);
+  boxObjE.position.multiplyScalar(- 1);
+
+  const pivotE = new THREE.Group();
+  pivotE.position.x = 0.1;
+  scene.add(pivotE);
+  pivotE.add(boxObjE);
 
   //M2
 
@@ -175,31 +195,40 @@ function main() {
   groupM2.add(plane2);
   groupM2.add(plane3);
   groupM2.add(plane4);
-  scene.add(groupM2);
+
+  const boxObjM2 = new THREE.Object3D();
+  boxObjM2.add(groupM2);
+
+  const boxM2 = new THREE.Box3().setFromObject(boxObjM2);
+  boxM2.getCenter(boxObjM2.position);
+  boxObjM2.position.multiplyScalar(- 1);
+
+  const pivotM2 = new THREE.Group();
+  pivotM2.position.x = 1.8;
+  scene.add(pivotM2);
+  pivotM2.add(boxObjM2);
+
 
   //клавиши 1, 2, 3
 
-  let needRotate = 0;
+  let needRotateM1 = false;
+  let needRotateE = false;
+  let needRotateM2 = false;
 
-  document.addEventListener('keyup', (event) => {
-    needRotate = (event.code == 'Digit1') ?
-      1 : (event.code == 'Digit2') ?
-        2 : (event.code == 'Digit3') ? 3 : 0;
+  document.addEventListener('keyup', event => {
+    (event.code == 'Digit1') ? needRotateM1 = true :
+      (event.code == 'Digit2') ? needRotateE = true :
+        (event.code == 'Digit3') ? needRotateM2 = true : () => {
+          needRotateM1 = false;
+          needRotateE = false;
+          needRotateM2 = false;
+        };
   });
 
-  /* const rotateAroundObjectAxis = function (object, axis, radians) {
-    rotObjectMatrix = new THREE.Matrix4();
-    rotObjectMatrix.makeRotationAxis(axis.normalize(), radians);
-    object.matrix.multiply(rotObjectMatrix)//.makeTranslation(-1, 0, 0);
-    object.rotation.setFromRotationMatrix(object.matrix);
-  } */
-
-  //rotateAroundObjectAxis(object, new THREE.Vector3(0,1,0), Math.PI/4);
-
   const step = Math.PI / 100;
-  let angle = 0;
-
-  //const quaternion = new THREE.Quaternion();
+  let angleM1 = 0;
+  let angleE = 0;
+  let angleM2 = 0;
 
   function render(time) {
     time *= 0.001;
@@ -210,38 +239,33 @@ function main() {
       camera.updateProjectionMatrix();
     }
 
-    
-    const groupM1control= new THREE.ObjectControls(camera, renderer.domElement, groupM1);
-
-    // console.log('step = ', step);
-    // console.log('angle = ', angle);
-
-    /*  const vector = new THREE.Vector3(1, 0, 0);
-     vector.applyQuaternion(quaternion); */
-
-    if (needRotate) {
-      if (angle < 2 * Math.PI) {
-        angle += step;
-        // console.log(angle);
-        if (needRotate == 1) {
-          //rotateAroundObjectAxis(groupM1, new THREE.Vector3(-1, 0, 0), step);
-          groupM1control.setRotationY(angle);
-          groupM1control.update();
-          console.log(angle);
-          console.log(groupM1control)
-        } else if (needRotate == 2) {
-          groupE.rotation.y += step;
-          //groupE.rotation.set(0, angle, 0);
-        } else if (needRotate == 3) {
-          //groupM2.rotateY(step);
-          /* quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), step);
-          groupM2.matrixWorld.transformQuaternion( quaternion );
-          groupM2.applyQuaternion(quaternion); */
-          groupM2.rotateOnAxis(new THREE.Vector3(0, 1, 0), step);
-        }
+    if (needRotateM1) {
+      if (angleM1 < 2 * Math.PI) {
+        angleM1 += step;
+        pivotM1.rotation.set(0, angleM1, 0);
       } else {
-        angle = 0;
-        needRotate = 0;
+        angleM1 = 0;
+        needRotateM1 = false;
+      }
+    }
+
+    if (needRotateE) {
+      if (angleE < 2 * Math.PI) {
+        angleE += step;
+        pivotE.rotation.set(0, angleE, 0);
+      } else {
+        angleE = 0;
+        needRotateE = false;
+      }
+    }
+
+    if (needRotateM2) {
+      if (angleM2 < 2 * Math.PI) {
+        angleM2 += step;
+        pivotM2.rotation.set(0, angleM2, 0);
+      } else {
+        angleM2 = 0;
+        needRotateM2 = false;
       }
     }
 
