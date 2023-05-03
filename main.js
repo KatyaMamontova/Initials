@@ -4,7 +4,6 @@ function main() {
     canvas,
     antialiasing: true
   });
-  //renderer.shadowMap.enabled = true;
 
   let fov = 100;
   const aspect = 2;
@@ -20,13 +19,9 @@ function main() {
   let lightY = 2;
   const lightZ = 3;
 
-
   const color = 0xFFFFFF;
   const intensity = 1;
   const light = new THREE.PointLight(color, intensity);
-  //light.castShadow = true;
-  //light.shadow.mapSize.width = 512;
-  //light.shadow.mapSize.height = 512;
   light.angle = 0.5;
   light.position.set(lightX, lightY, lightZ);
   scene.add(light);
@@ -44,9 +39,9 @@ function main() {
   }
 
   //фон
-
+  const loader = new THREE.TextureLoader();
   {
-    const loader = new THREE.TextureLoader();
+
     const texture = loader.load(
       'https://threejsfundamentals.org/threejs/resources/images/equirectangularmaps/tears_of_steel_bridge_2k.jpg',
       () => {
@@ -60,34 +55,82 @@ function main() {
   controls.target.set(0, 0, 0);
   controls.update();
 
-  //M
+  //материалы
 
-  const material1 = new THREE.MeshStandardMaterial({
-    color: 0xAAFFFF,
+  const colorInput = document.getElementById('colorInput');
+  colorInput.addEventListener('input', () => {
+    materialColor.color.set(colorInput.value)
+  })
+  const materialColor = new THREE.MeshStandardMaterial({
+    color: colorInput.value,
     roughness: 0.3,
     metalness: 0.2
   });
+
+
+  const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(1024);
+  const cubeCamera = new THREE.CubeCamera(1, 1000, cubeRenderTarget);
+  const materialMirror = new THREE.MeshStandardMaterial({
+    envMap: cubeRenderTarget.texture,
+    roughness: 0.01,
+    metalness: 1,
+    side: THREE.DoubleSide,
+  });
+
+
+  const imgTexture = THREE.ImageUtils.loadTexture(
+    "forest.jpg"
+  );
+  const materialImage = new THREE.MeshPhongMaterial({
+    map: imgTexture,
+    side: THREE.DoubleSide,
+  });
+
+
+  const materialTransparent = new THREE.MeshStandardMaterial({
+    color: 0xFF1111,
+    roughness: 0.3,
+    metalness: 0.2,
+    transparent: true,
+    opacity: 0.5
+  });
+
+
+  uniforms2 = {
+    "time": { value: 1.1 },
+    resolution: { type: "v2", value: new THREE.Vector2 }
+  };
+  const materialShader = new THREE.ShaderMaterial({
+    uniforms: uniforms2,
+    vertexShader: document.getElementById('vs').textContent,
+    fragmentShader: document.getElementById('fsBox').textContent,
+    side: THREE.DoubleSide,
+    transparent: true,
+  });
+
+
+  //M
 
   const widthLB = 0.3;
   const height = 1.6;
   const depthB = 0.2;
   const longBoxGeometry = new THREE.BoxGeometry(widthLB, height, depthB);
-  const box1 = new THREE.Mesh(longBoxGeometry, material1);
+  const box1 = new THREE.Mesh(longBoxGeometry, materialMirror);
 
   const widthSB = 0.2;
   const heightSB = 1;
   const shortBoxGeometry = new THREE.BoxGeometry(widthSB, heightSB, depthB);
-  const box2 = new THREE.Mesh(shortBoxGeometry, material1);
+  const box2 = new THREE.Mesh(shortBoxGeometry, materialMirror);
   box2.position.x = box1.position.x + 0.42;
   box2.position.y = 0.38;
   box2.rotateZ(Math.PI / 4);
 
-  const box3 = new THREE.Mesh(shortBoxGeometry, material1);
+  const box3 = new THREE.Mesh(shortBoxGeometry, materialMirror);
   box3.position.x = box2.position.x + 0.57;
   box3.position.y = box2.position.y;
   box3.rotateZ(-Math.PI / 4);
 
-  const box4 = new THREE.Mesh(longBoxGeometry, material1);
+  const box4 = new THREE.Mesh(longBoxGeometry, materialMirror);
   box4.position.x = box1.position.x + 1.42;
 
   const groupM1 = new THREE.Group();
@@ -111,35 +154,34 @@ function main() {
 
   //E
 
-  const material2 = new THREE.MeshStandardMaterial({
-    color: 0xFFAAFF,
-    roughness: 0.3,
-    metalness: 0.2
-  });
-
   const radiusTop = 0.2;
   const radiusBottom = 0.2;
   const heightLC = height;
   const radialSegments = 12;
   const longCylinderGeometry = new THREE.CylinderGeometry(
     radiusTop, radiusBottom, heightLC, radialSegments);
-  const cylinder1 = new THREE.Mesh(longCylinderGeometry, material2);
+  const cylinder1 = new THREE.Mesh(longCylinderGeometry, materialImage);
 
   const heightSC = 1;
   const shortCylinderGeometry = new THREE.CylinderGeometry(radiusTop, radiusBottom, heightSC, radialSegments);
-  const cylinder2 = new THREE.Mesh(shortCylinderGeometry, material2);
+  const cylinder2 = new THREE.Mesh(shortCylinderGeometry, materialImage);
   cylinder2.position.x = cylinder1.position.x + 0.5;
   cylinder2.position.y = heightLC / 2 - radiusTop;
   cylinder2.rotateZ(Math.PI / 2);
 
-  const cylinder3 = new THREE.Mesh(shortCylinderGeometry, material2);
+  const cylinder3 = new THREE.Mesh(shortCylinderGeometry, materialImage);
   cylinder3.position.x = cylinder1.position.x + 0.5;
   cylinder3.rotateZ(Math.PI / 2);
 
-  const cylinder4 = new THREE.Mesh(shortCylinderGeometry, material2);
+  const cylinder4 = new THREE.Mesh(shortCylinderGeometry, materialImage);
   cylinder4.position.x = cylinder1.position.x + 0.5;
   cylinder4.position.y = -heightLC / 2 + radiusTop;
   cylinder4.rotateZ(Math.PI / 2);
+
+  /* scene.add(cylinder1);
+  scene.add(cylinder2);
+  scene.add(cylinder3);
+  scene.add(cylinder4); */
 
   const groupE = new THREE.Group();
   groupE.add(cylinder1);
@@ -161,34 +203,32 @@ function main() {
 
   //M2
 
-  const material3 = new THREE.MeshStandardMaterial({
-    color: 0xFFFFAA,
-    roughness: 0.3,
-    metalness: 0.2,
-    side: THREE.DoubleSide
-  });
-
   const widthLP = 0.3;
   const heightLP = height;
   const longPlaneGeometry = new THREE.PlaneGeometry(widthLP, heightLP);
-  const plane1 = new THREE.Mesh(longPlaneGeometry, material3);
+  const plane1 = new THREE.Mesh(longPlaneGeometry, materialShader);
   plane1.position.x = 1;
 
   const widthSP = 0.3;
   const heightSP = 1;
   const shortPlaneGeometry = new THREE.PlaneGeometry(widthSP, heightSP);
-  const plane2 = new THREE.Mesh(shortPlaneGeometry, material3);
+  const plane2 = new THREE.Mesh(shortPlaneGeometry, materialShader);
   plane2.position.x = plane1.position.x + 0.4;
   plane2.position.y = 0.35;
   plane2.rotateZ(Math.PI / 4);
 
-  const plane3 = new THREE.Mesh(shortPlaneGeometry, material3);
+  const plane3 = new THREE.Mesh(shortPlaneGeometry, materialShader);
   plane3.position.x = plane2.position.x + 0.5;
   plane3.position.y = plane2.position.y;
   plane3.rotateZ(-Math.PI / 4);
 
-  const plane4 = new THREE.Mesh(longPlaneGeometry, material3);
+  const plane4 = new THREE.Mesh(longPlaneGeometry, materialShader);
   plane4.position.x = plane1.position.x + 1.3;
+
+  /*  scene.add(plane1);
+   scene.add(plane2);
+   scene.add(plane3);
+   scene.add(plane4); */
 
   const groupM2 = new THREE.Group();
   groupM2.add(plane1);
@@ -230,8 +270,50 @@ function main() {
   let angleE = 0;
   let angleM2 = 0;
 
+
+  //про материалы
+
+  //выбор буквы кликом
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  let currentMaterial = materialColor;
+  let intersects;
+
+  function onMouseClick(event) {
+
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    intersects = raycaster.intersectObjects(scene.children);
+
+    for (let i = 0; i < intersects.length; i++) {
+      intersects[i].object.material = currentMaterial;
+    }
+  }
+
+  window.addEventListener('click', onMouseClick, false);
+  //
+
+  //выбор материала
+
+  let materialInputs = document.querySelectorAll('input[name="material"]');
+
+  materialInputs.forEach(input => {
+    input.addEventListener('change', () => {
+      currentMaterial =
+        (input.value === 'mirror') ? materialMirror :
+          (input.value === 'picture') ? materialImage :
+            (input.value === 'transparency') ? materialTransparent :
+              (input.value === 'shader') ? materialShader : materialColor
+    });
+  });
+
+
   function render(time) {
     time *= 0.001;
+    uniforms2['time'].value = time;
 
     if (resizeRendererToDisplaySize(renderer)) {
       const canvas = renderer.domElement;
@@ -268,6 +350,9 @@ function main() {
         needRotateM2 = false;
       }
     }
+
+    cubeCamera.update(renderer, scene);
+    materialMirror.envMap = cubeRenderTarget.texture;
 
     renderer.render(scene, camera);
 
